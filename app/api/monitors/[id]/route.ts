@@ -1,21 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getServerAuthSession } from "@/lib/auth/nextauth";
 import { monitorUpdateSchema } from "@/lib/validation/monitors";
 import { validateMonitorUrl } from "@/lib/monitor/validate";
 
 type RouteParams = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   const session = await getServerAuthSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const monitor = await prisma.monitor.findFirst({
-    where: { id: params.id, project: { userId: session.user.id } },
+    where: { id, project: { userId: session.user.id } },
     include: {
       changeEvents: {
         orderBy: { createdAt: "desc" },
@@ -34,7 +35,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
   return NextResponse.json({ monitor });
 }
 
-export async function PATCH(request: Request, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
   const session = await getServerAuthSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -63,7 +65,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 
   const monitor = await prisma.monitor.findFirst({
-    where: { id: params.id, project: { userId: session.user.id } },
+    where: { id, project: { userId: session.user.id } },
   });
 
   if (!monitor) {
