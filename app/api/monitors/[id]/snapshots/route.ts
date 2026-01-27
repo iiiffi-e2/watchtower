@@ -22,7 +22,14 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 
   const { searchParams } = new URL(request.url);
-  const limit = Number(searchParams.get("limit") ?? "10");
+  const limitParam = searchParams.get("limit");
+  const limit = limitParam ? Number(limitParam) : 10;
+  if (!Number.isFinite(limit) || !Number.isInteger(limit) || limit <= 0) {
+    return NextResponse.json(
+      { error: "Invalid limit. Use a positive integer." },
+      { status: 400 }
+    );
+  }
 
   const snapshots = await prisma.snapshot.findMany({
     where: { monitorId: monitor.id },
