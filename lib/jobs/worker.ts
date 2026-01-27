@@ -337,7 +337,14 @@ export async function startWorker() {
 
   await boss.work(SCHEDULER_JOB, {}, runScheduler);
   await boss.work(RUN_MONITOR_JOB, {}, async (job) => {
-    await runMonitor(job.data.monitorId as string);
+    const jobs = Array.isArray(job) ? job : [job];
+    for (const item of jobs) {
+      const monitorId = (item as { data?: { monitorId?: string } }).data
+        ?.monitorId;
+      if (monitorId) {
+        await runMonitor(monitorId);
+      }
+    }
   });
 
   return boss;
