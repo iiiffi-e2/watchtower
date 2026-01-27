@@ -1,4 +1,4 @@
-import PgBoss from "pg-boss";
+import { PgBoss } from "pg-boss";
 
 const globalForBoss = globalThis as unknown as {
   boss?: PgBoss;
