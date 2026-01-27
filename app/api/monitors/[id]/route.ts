@@ -58,8 +58,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   let updatedUrl = parsed.data.url;
   if (updatedUrl) {
     const urlCheck = validateMonitorUrl(updatedUrl);
-    if (!urlCheck.ok) {
-      return NextResponse.json({ error: urlCheck.error }, { status: 400 });
+    if (!urlCheck.ok || !urlCheck.url) {
+      return NextResponse.json(
+        { error: urlCheck.error ?? "Invalid URL." },
+        { status: 400 }
+      );
     }
     updatedUrl = urlCheck.url;
   }

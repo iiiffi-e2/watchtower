@@ -137,8 +137,8 @@ export async function runMonitor(monitorId: string) {
     }
 
     const urlCheck = validateMonitorUrl(monitor.url);
-    if (!urlCheck.ok) {
-      throw new Error(urlCheck.error);
+    if (!urlCheck.ok || !urlCheck.url) {
+      throw new Error(urlCheck.error ?? "Invalid monitor URL.");
     }
 
     const fetchResult = await fetchPage(urlCheck.url);
