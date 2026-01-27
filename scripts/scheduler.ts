@@ -5,7 +5,7 @@ async function main() {
   const boss = getBoss();
   await boss.start();
   await boss.schedule("scheduler", "*/10 * * * *");
-  await boss.work("scheduler", { teamSize: 1 }, runScheduler);
+  await boss.work("scheduler", {}, runScheduler);
 
   // eslint-disable-next-line no-console
   console.log("Watchtower scheduler started");

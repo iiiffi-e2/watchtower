@@ -1,4 +1,4 @@
-import cheerio from "cheerio";
+import { load } from "cheerio";
 import type { MonitorMode } from "@prisma/client";
 
 const ZERO_WIDTH = /[\u200B-\u200D\uFEFF]/g;
@@ -19,7 +19,7 @@ export function normalizeExtracted(input: string, mode: MonitorMode) {
   const base = baseNormalize(input);
 
   if (mode === "FULL_HTML") {
-    const $ = cheerio.load(base);
+    const $ = load(base);
     $("script, style").remove();
     $("*")
       .contents()
@@ -35,7 +35,13 @@ export function normalizeExtracted(input: string, mode: MonitorMode) {
     ]);
 
     $("*").each((_, element) => {
-      const attribs = element.attribs ?? {};
+      if (!("attribs" in element)) {
+        return;
+      }
+      const attribs = (element as { attribs?: Record<string, string> }).attribs;
+      if (!attribs) {
+        return;
+      }
       Object.keys(attribs).forEach((attr) => {
         if (attrsToRemove.has(attr)) {
           $(element).removeAttr(attr);
