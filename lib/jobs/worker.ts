@@ -194,7 +194,24 @@ export async function runMonitor(monitorId: string) {
     }
 
     const previousSnapshot = monitor.lastContentRef;
-    const prevContent = previousSnapshot?.content ?? "";
+    if (!previousSnapshot) {
+      await prisma.monitor.update({
+        where: { id: monitor.id },
+        data: {
+          lastHash: hash,
+          lastContentRefId: snapshot.id,
+          lastCheckedAt: new Date(),
+          consecutiveErrors: 0,
+          lastError: null,
+        },
+      });
+      await prisma.jobRun.update({
+        where: { id: jobRun.id },
+        data: { finishedAt: new Date(), success: true },
+      });
+      return;
+    }
+    const prevContent = previousSnapshot.content;
 
     if (monitor.lastHash === hash) {
       await prisma.monitor.update({
