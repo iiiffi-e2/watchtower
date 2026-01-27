@@ -1,0 +1,65 @@
+{
+  "name": "watchtower",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "worker": "ts-node scripts/worker.ts",
+    "scheduler": "ts-node scripts/scheduler.ts",
+    "seed": "ts-node scripts/seed.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iiiffi-e2/watchtower.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iiiffi-e2/watchtower/issues"
+  },
+  "homepage": "https://github.com/iiiffi-e2/watchtower#readme",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "bcryptjs": "^3.0.3",
+    "cheerio": "^1.2.0",
+    "diff-match-patch": "^1.0.5",
+    "next": "^16.1.5",
+    "next-auth": "^4.24.13",
+    "pg": "^8.17.2",
+    "pg-boss": "^12.7.1",
+    "playwright": "^1.58.0",
+    "prisma": "^7.3.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "resend": "^6.8.0",
+    "undici": "^7.19.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/diff-match-patch": "^1.0.36",
+    "@types/node": "^25.0.10",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS",
+      "moduleResolution": "node",
+      "esModuleInterop": true
+    }
+  }
+}

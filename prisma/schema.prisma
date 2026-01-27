@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  FREE
+  PRO
+  AGENCY
+}
+
+enum MonitorStatus {
+  ACTIVE
+  PAUSED
+  ERROR
+}
+
+enum MonitorMode {
+  TEXT_ONLY
+  FULL_HTML
+  SELECTOR
+}
+
+enum MonitorFrequency {
+  DAILY
+  WEEKLY
+}
+
+enum MonitorSensitivity {
+  MEANINGFUL_ONLY
+  ANY_CHANGE
+}
+
+enum SnapshotSource {
+  PLAYWRIGHT
+  FETCH
+}
+
+enum SnapshotContentType {
+  TEXT
+  HTML
+}
+
+enum NotificationTargetType {
+  EMAIL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  plan         Plan     @default(FREE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  projects Project[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id])
+  monitors           Monitor[]
+  notificationTargets NotificationTarget[]
+
+  @@index([userId])
+}
+
+model Monitor {
+  id                String             @id @default(cuid())
+  projectId         String
+  name              String?
+  url               String
+  status            MonitorStatus      @default(ACTIVE)
+  mode              MonitorMode        @default(TEXT_ONLY)
+  selector          String?
+  ignoreSelectors   String[]           @default([])
+  frequency         MonitorFrequency   @default(DAILY)
+  sensitivity       MonitorSensitivity @default(MEANINGFUL_ONLY)
+  keywords          String[]           @default([])
+  lastCheckedAt     DateTime?
+  lastHash          String?
+  lastContentRefId  String?
+  consecutiveErrors Int                @default(0)
+  lastError         String?
+  nextDueAt         DateTime           @default(now())
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  project        Project        @relation(fields: [projectId], references: [id])
+  snapshots      Snapshot[]
+  changeEvents   ChangeEvent[]
+  lastContentRef Snapshot?      @relation("LastSnapshot", fields: [lastContentRefId], references: [id])
+  jobRuns        JobRun[]
+
+  @@index([projectId])
+  @@index([nextDueAt])
+}
+
+model Snapshot {
+  id          String              @id @default(cuid())
+  monitorId   String
+  capturedAt  DateTime            @default(now())
+  source      SnapshotSource
+  httpStatus  Int?
+  contentType SnapshotContentType
+  content     String
+  rawMeta     Json?
+  hash        String
+  createdAt   DateTime            @default(now())
+
+  monitor                Monitor       @relation(fields: [monitorId], references: [id])
+  previousChangeEvents   ChangeEvent[] @relation("PreviousSnapshot")
+  currentChangeEvents    ChangeEvent[] @relation("CurrentSnapshot")
+  lastContentRefForMonitors Monitor[]  @relation("LastSnapshot")
+
+  @@index([monitorId, capturedAt])
+}
+
+model ChangeEvent {
+  id                 String   @id @default(cuid())
+  monitorId          String
+  createdAt          DateTime @default(now())
+  previousSnapshotId String
+  currentSnapshotId  String
+  diffText           String
+  summary            String?
+  importanceScore    Int      @default(0)
+  notifiedAt         DateTime?
+  notifyError        String?
+
+  monitor          Monitor  @relation(fields: [monitorId], references: [id])
+  previousSnapshot Snapshot @relation("PreviousSnapshot", fields: [previousSnapshotId], references: [id])
+  currentSnapshot  Snapshot @relation("CurrentSnapshot", fields: [currentSnapshotId], references: [id])
+
+  @@index([monitorId, createdAt])
+}
+
+model NotificationTarget {
+  id        String                 @id @default(cuid())
+  projectId String
+  type      NotificationTargetType
+  value     String
+  isEnabled Boolean                @default(true)
+  createdAt DateTime               @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+model JobRun {
+  id         String   @id @default(cuid())
+  monitorId  String
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  success    Boolean  @default(false)
+  error      String?
+  notes      Json?
+
+  monitor Monitor @relation(fields: [monitorId], references: [id])
+
+  @@index([monitorId])
+}
