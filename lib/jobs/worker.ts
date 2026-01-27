@@ -335,8 +335,8 @@ export async function startWorker() {
   await boss.start();
   await boss.schedule(SCHEDULER_JOB, "*/10 * * * *");
 
-  await boss.work(SCHEDULER_JOB, { teamSize: 1 }, runScheduler);
-  await boss.work(RUN_MONITOR_JOB, { teamSize: 4 }, async (job) => {
+  await boss.work(SCHEDULER_JOB, {}, runScheduler);
+  await boss.work(RUN_MONITOR_JOB, {}, async (job) => {
     await runMonitor(job.data.monitorId as string);
   });
 
