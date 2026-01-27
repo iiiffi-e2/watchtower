@@ -55,8 +55,11 @@ export async function POST(request: Request) {
   }
 
   const urlCheck = validateMonitorUrl(parsed.data.url);
-  if (!urlCheck.ok) {
-    return NextResponse.json({ error: urlCheck.error }, { status: 400 });
+  if (!urlCheck.ok || !urlCheck.url) {
+    return NextResponse.json(
+      { error: urlCheck.error ?? "Invalid URL." },
+      { status: 400 }
+    );
   }
 
   if (parsed.data.mode === "SELECTOR" && !parsed.data.selector) {
