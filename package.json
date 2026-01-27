@@ -58,6 +58,8 @@
     "typescript": "^5.9.3"
   },
   "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
     "compilerOptions": {
       "module": "CommonJS",
       "moduleResolution": "node",
