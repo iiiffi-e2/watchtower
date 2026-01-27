@@ -1,5 +1,5 @@
-import { prisma } from "../lib/db/prisma";
-import { hashPassword } from "../lib/auth/password";
+import { prisma } from "../lib/db/prisma.ts";
+import { hashPassword } from "../lib/auth/password.ts";
 
 async function main() {
   const email = process.env.SEED_EMAIL ?? "demo@watchtower.dev";

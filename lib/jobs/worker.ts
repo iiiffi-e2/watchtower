@@ -1,16 +1,16 @@
 import type { MonitorFrequency } from "@prisma/client";
-import { prisma } from "@/lib/db/prisma";
-import { getBoss } from "@/lib/jobs/boss";
-import { fetchPage } from "@/lib/monitor/fetch";
-import { extractContent } from "@/lib/monitor/extract";
-import { normalizeExtracted } from "@/lib/monitor/normalize";
-import { sha256 } from "@/lib/monitor/hash";
-import { createDiff, extractSnippets } from "@/lib/monitor/diff";
-import { isMeaningfulChange, scoreImportance } from "@/lib/monitor/meaningful";
-import { generateSummary } from "@/lib/monitor/summary";
-import { buildChangeEmail } from "@/lib/email/templates";
-import { sendEmail } from "@/lib/email/send";
-import { validateMonitorUrl } from "@/lib/monitor/validate";
+import { prisma } from "../db/prisma";
+import { getBoss } from "./boss";
+import { fetchPage } from "../monitor/fetch";
+import { extractContent } from "../monitor/extract";
+import { normalizeExtracted } from "../monitor/normalize";
+import { sha256 } from "../monitor/hash";
+import { createDiff, extractSnippets } from "../monitor/diff";
+import { isMeaningfulChange, scoreImportance } from "../monitor/meaningful";
+import { generateSummary } from "../monitor/summary";
+import { buildChangeEmail } from "../email/templates";
+import { sendEmail } from "../email/send";
+import { validateMonitorUrl } from "../monitor/validate";
 
 const RUN_MONITOR_JOB = "run-monitor";
 const SCHEDULER_JOB = "scheduler";

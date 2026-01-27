@@ -1,5 +1,5 @@
-import { getBoss } from "../lib/jobs/boss";
-import { runScheduler } from "../lib/jobs/worker";
+import { getBoss } from "../lib/jobs/boss.ts";
+import { runScheduler } from "../lib/jobs/worker.ts";
 
 async function main() {
   const boss = getBoss();
