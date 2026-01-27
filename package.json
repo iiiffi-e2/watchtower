@@ -61,6 +61,7 @@
     "esm": true,
     "experimentalSpecifierResolution": "node",
     "compilerOptions": {
+      "allowImportingTsExtensions": true,
       "module": "CommonJS",
       "moduleResolution": "node",
       "esModuleInterop": true
