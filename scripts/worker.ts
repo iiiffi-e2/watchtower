@@ -1,4 +1,4 @@
-import { startWorker } from "../lib/jobs/worker";
+import { startWorker } from "../lib/jobs/worker.js";
 
 async function main() {
   const boss = await startWorker();
