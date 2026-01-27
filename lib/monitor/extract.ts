@@ -1,4 +1,4 @@
-import cheerio from "cheerio";
+import { load, type CheerioAPI } from "cheerio";
 import type { MonitorMode, SnapshotContentType } from "@prisma/client";
 
 export type ExtractResult = {
@@ -16,7 +16,7 @@ const DEFAULT_IGNORE_SELECTORS = [
   "[role=\"dialog\"]",
 ];
 
-function removeIgnored($: cheerio.CheerioAPI, ignoreSelectors: string[]) {
+function removeIgnored($: CheerioAPI, ignoreSelectors: string[]) {
   ignoreSelectors.forEach((selector) => {
     try {
       $(selector).remove();
@@ -26,7 +26,7 @@ function removeIgnored($: cheerio.CheerioAPI, ignoreSelectors: string[]) {
   });
 }
 
-function removeNoise($: cheerio.CheerioAPI) {
+function removeNoise($: CheerioAPI) {
   $("script, style, noscript, svg, canvas").remove();
 }
 
@@ -36,7 +36,7 @@ export function extractContent(
   selector?: string | null,
   ignoreSelectors?: string[]
 ): ExtractResult {
-  const $ = cheerio.load(html);
+  const $ = load(html);
 
   removeNoise($);
 
