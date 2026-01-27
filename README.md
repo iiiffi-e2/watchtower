@@ -78,6 +78,7 @@ pnpm scheduler
 - `pnpm scheduler` – scheduler-only worker
 - `pnpm prisma:generate` – generate Prisma client
 - `pnpm prisma:migrate` – run migrations
+- `pnpm prisma:deploy` – run production migrations
 - `pnpm seed` – seed demo user + project
 
 ## Environment variables
@@ -96,3 +97,5 @@ FEATURE_ENFORCE_PLAN=false
 - Plan enforcement is feature-flagged via `FEATURE_ENFORCE_PLAN`.
 - The worker uses Playwright first, then falls back to undici if rendering fails.
 - pg-boss uses Postgres; ensure the database is reachable before running worker.
+- In production, ensure migrations are applied (`pnpm prisma:deploy`) before
+  starting the app.
