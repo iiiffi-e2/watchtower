@@ -1,6 +1,9 @@
-import pkg from "diff-match-patch";
+import * as DiffModule from "diff-match-patch";
 
-const { diff_match_patch, Diff } = pkg as typeof import("diff-match-patch");
+type DiffModuleType = typeof import("diff-match-patch");
+const mod = DiffModule as DiffModuleType & { default?: DiffModuleType };
+const { diff_match_patch } = mod.default ?? mod;
+type Diff = DiffModuleType["Diff"];
 
 const dmp = new diff_match_patch();
 

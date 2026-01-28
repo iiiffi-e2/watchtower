@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import pkg from "pg";
+import * as PgModule from "pg";
 
-const { Pool } = pkg as typeof import("pg");
+type PgModuleType = typeof import("pg");
+const pg = PgModule as PgModuleType & { default?: PgModuleType };
+const { Pool } = pg.default ?? pg;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;

@@ -1,9 +1,9 @@
-import pkg from "pg-boss";
+import * as PgBossModule from "pg-boss";
 
-const { PgBoss } = pkg as typeof import("pg-boss");
+const PgBoss = (PgBossModule as { default?: typeof PgBossModule.PgBoss; PgBoss: typeof PgBossModule.PgBoss }).default ?? PgBossModule.PgBoss;
 
 const globalForBoss = globalThis as unknown as {
-  boss?: PgBoss;
+  boss?: InstanceType<typeof PgBoss>;
 };
 
 export function getBoss() {
