@@ -1,9 +1,9 @@
 import * as DiffModule from "diff-match-patch";
+import type { Diff } from "diff-match-patch";
 
 type DiffModuleType = typeof import("diff-match-patch");
 const mod = DiffModule as DiffModuleType & { default?: DiffModuleType };
 const { diff_match_patch } = mod.default ?? mod;
-type Diff = DiffModuleType["Diff"];
 
 const dmp = new diff_match_patch();
 
