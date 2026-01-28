@@ -1,6 +1,4 @@
-import pkg from "diff-match-patch";
-
-const { diff_match_patch, Diff } = pkg as typeof import("diff-match-patch");
+import { diff_match_patch, Diff } from "diff-match-patch";
 
 const dmp = new diff_match_patch();
 
