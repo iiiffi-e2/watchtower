@@ -1,4 +1,6 @@
-import { PgBoss } from "pg-boss";
+import pkg from "pg-boss";
+
+const { PgBoss } = pkg as typeof import("pg-boss");
 
 const globalForBoss = globalThis as unknown as {
   boss?: PgBoss;
