@@ -333,6 +333,10 @@ export async function runMonitor(monitorId: string) {
 export async function startWorker() {
   const boss = getBoss();
   await boss.start();
+
+  await boss.createQueue(SCHEDULER_JOB);
+  await boss.createQueue(RUN_MONITOR_JOB);
+
   await boss.schedule(SCHEDULER_JOB, "*/10 * * * *");
 
   await boss.work(SCHEDULER_JOB, {}, runScheduler);
