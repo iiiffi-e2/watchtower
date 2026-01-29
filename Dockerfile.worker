@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/playwright:v1.58.0-jammy
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
+COPY tsconfig.json ./
+COPY scripts ./scripts
+COPY lib ./lib
+
+RUN corepack enable
+RUN pnpm install --frozen-lockfile
+RUN pnpm prisma:generate
+
+CMD ["pnpm", "worker"]
