@@ -33,6 +33,8 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   const boss = getBoss();
+  await boss.start();
+  await boss.createQueue(RUN_MONITOR_JOB);
   const jobId = await boss.send(RUN_MONITOR_JOB, { monitorId: monitor.id });
 
   return NextResponse.json({ jobId });
