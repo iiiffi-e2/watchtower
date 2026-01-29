@@ -109,17 +109,24 @@ export default async function MonitorDetailPage({ params }: PageProps) {
           <p className="muted">No screenshot captured yet.</p>
         )}
         {latestSnapshot?.screenshotMime && (
-          <img
-            src={`/api/snapshots/${latestSnapshot.id}/screenshot`}
-            alt={`Latest screenshot for ${monitor.name ?? monitor.url}`}
-            style={{
-              width: "100%",
-              maxHeight: 520,
-              objectFit: "contain",
-              borderRadius: 12,
-              border: "1px solid #e5e7eb",
-            }}
-          />
+          <a
+            href={`/api/snapshots/${latestSnapshot.id}/screenshot`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img
+              src={`/api/snapshots/${latestSnapshot.id}/screenshot`}
+              alt={`Latest screenshot for ${monitor.name ?? monitor.url}`}
+              style={{
+                width: "100%",
+                maxHeight: 520,
+                objectFit: "contain",
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+                cursor: "zoom-in",
+              }}
+            />
+          </a>
         )}
       </div>
 
@@ -165,17 +172,24 @@ export default async function MonitorDetailPage({ params }: PageProps) {
                   <div>
                     <div className="muted">Before screenshot</div>
                     {beforeScreenshot ? (
-                      <img
-                        src={`/api/snapshots/${event.previousSnapshot?.id}/screenshot`}
-                        alt="Before change screenshot"
-                        style={{
-                          width: "100%",
-                          maxHeight: 420,
-                          objectFit: "contain",
-                          borderRadius: 12,
-                          border: "1px solid #e5e7eb",
-                        }}
-                      />
+                      <a
+                        href={`/api/snapshots/${event.previousSnapshot?.id}/screenshot`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          src={`/api/snapshots/${event.previousSnapshot?.id}/screenshot`}
+                          alt="Before change screenshot"
+                          style={{
+                            width: "100%",
+                            maxHeight: 420,
+                            objectFit: "contain",
+                            borderRadius: 12,
+                            border: "1px solid #e5e7eb",
+                            cursor: "zoom-in",
+                          }}
+                        />
+                      </a>
                     ) : (
                       <div className="muted">No screenshot available.</div>
                     )}
@@ -183,17 +197,24 @@ export default async function MonitorDetailPage({ params }: PageProps) {
                   <div>
                     <div className="muted">After screenshot</div>
                     {afterScreenshot ? (
-                      <img
-                        src={`/api/snapshots/${event.currentSnapshot?.id}/screenshot`}
-                        alt="After change screenshot"
-                        style={{
-                          width: "100%",
-                          maxHeight: 420,
-                          objectFit: "contain",
-                          borderRadius: 12,
-                          border: "1px solid #e5e7eb",
-                        }}
-                      />
+                      <a
+                        href={`/api/snapshots/${event.currentSnapshot?.id}/screenshot`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          src={`/api/snapshots/${event.currentSnapshot?.id}/screenshot`}
+                          alt="After change screenshot"
+                          style={{
+                            width: "100%",
+                            maxHeight: 420,
+                            objectFit: "contain",
+                            borderRadius: 12,
+                            border: "1px solid #e5e7eb",
+                            cursor: "zoom-in",
+                          }}
+                        />
+                      </a>
                     ) : (
                       <div className="muted">No screenshot available.</div>
                     )}

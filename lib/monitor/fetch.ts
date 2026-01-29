@@ -39,6 +39,7 @@ export async function fetchPage(
       userAgent: DEFAULT_USER_AGENT,
       locale: "en-US",
     });
+    await page.setViewportSize({ width: 1365, height: 2000 });
 
     await page.route("**/*", (route) => {
       const type = route.request().resourceType();
@@ -56,6 +57,11 @@ export async function fetchPage(
 
     try {
       await page.waitForLoadState("networkidle", { timeout: 5000 });
+    } catch {
+      // best effort only
+    }
+    try {
+      await page.waitForTimeout(2000);
     } catch {
       // best effort only
     }
