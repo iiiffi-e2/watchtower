@@ -224,6 +224,9 @@ export async function runMonitor(monitorId: string) {
     });
 
     const hash = sha256(normalized);
+    const screenshotBytes = fetchResult.screenshot
+      ? new Uint8Array(fetchResult.screenshot)
+      : null;
     const snapshot = await prisma.snapshot.create({
       data: {
         monitorId: monitor.id,
@@ -231,7 +234,7 @@ export async function runMonitor(monitorId: string) {
         httpStatus: fetchResult.status,
         contentType: extractResult.contentType,
         content: normalized,
-        screenshot: fetchResult.screenshot,
+        screenshot: screenshotBytes,
         screenshotMime: fetchResult.screenshotType,
         rawMeta: {
           title: fetchResult.title,
