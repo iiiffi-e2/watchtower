@@ -15,6 +15,46 @@ import { validateMonitorUrl } from "../monitor/validate.ts";
 const RUN_MONITOR_JOB = "run-monitor";
 const SCHEDULER_JOB = "scheduler";
 
+type LogLevel = "debug" | "info" | "warn" | "error";
+
+const LOG_LEVELS: Record<LogLevel, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+};
+
+const LOG_LEVEL = (
+  process.env.WATCHTOWER_LOG_LEVEL ?? "info"
+).toLowerCase() as LogLevel;
+
+const HEARTBEAT_MINUTES = Number(
+  process.env.WATCHTOWER_WORKER_HEARTBEAT_MINUTES ??
+    (LOG_LEVEL === "debug" ? "5" : "0")
+);
+
+function shouldLog(level: LogLevel) {
+  const current = LOG_LEVELS[LOG_LEVEL] ?? LOG_LEVELS.info;
+  return LOG_LEVELS[level] >= current;
+}
+
+function log(level: LogLevel, message: string, meta?: Record<string, unknown>) {
+  if (!shouldLog(level)) return;
+  const line = meta ? `${message} ${JSON.stringify(meta)}` : message;
+  if (level === "error") {
+    // eslint-disable-next-line no-console
+    console.error(line);
+    return;
+  }
+  if (level === "warn") {
+    // eslint-disable-next-line no-console
+    console.warn(line);
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log(line);
+}
+
 function addInterval(from: Date, frequency: MonitorFrequency) {
   const dayMs = 24 * 60 * 60 * 1000;
   if (frequency === "WEEKLY") {
@@ -33,6 +73,8 @@ export async function runScheduler() {
     select: { id: true, frequency: true },
   });
 
+  log("info", "Scheduler tick", { dueMonitors: dueMonitors.length });
+
   const boss = getBoss();
 
   for (const monitor of dueMonitors) {
@@ -42,6 +84,10 @@ export async function runScheduler() {
       data: { nextDueAt },
     });
     if (updated.count === 1) {
+      log("debug", "Scheduling monitor run", {
+        monitorId: monitor.id,
+        nextDueAt: nextDueAt.toISOString(),
+      });
       await boss.send(RUN_MONITOR_JOB, { monitorId: monitor.id });
     }
   }
@@ -114,6 +160,7 @@ export async function runMonitor(monitorId: string) {
   });
 
   try {
+    log("info", "Monitor run started", { monitorId, jobRunId: jobRun.id });
     const monitor = await prisma.monitor.findUnique({
       where: { id: monitorId },
       include: {
@@ -129,6 +176,10 @@ export async function runMonitor(monitorId: string) {
     }
 
     if (monitor.status !== "ACTIVE") {
+      log("info", "Monitor skipped (inactive)", {
+        monitorId,
+        status: monitor.status,
+      });
       await prisma.jobRun.update({
         where: { id: jobRun.id },
         data: { finishedAt: new Date(), success: true },
@@ -142,6 +193,13 @@ export async function runMonitor(monitorId: string) {
     }
 
     const fetchResult = await fetchPage(urlCheck.url);
+    log("debug", "Fetched page", {
+      monitorId,
+      source: fetchResult.source,
+      status: fetchResult.status,
+      finalUrl: fetchResult.finalUrl,
+      durationMs: fetchResult.timings.durationMs,
+    });
     const extractResult = extractContent(
       fetchResult.html,
       monitor.mode,
@@ -157,6 +215,11 @@ export async function runMonitor(monitorId: string) {
       extractResult.extracted,
       monitor.mode
     );
+    log("debug", "Content normalized", {
+      monitorId,
+      contentLength: normalized.length,
+      contentType: extractResult.contentType,
+    });
 
     const hash = sha256(normalized);
     const snapshot = await prisma.snapshot.create({
@@ -174,8 +237,10 @@ export async function runMonitor(monitorId: string) {
         hash,
       },
     });
+    log("debug", "Snapshot saved", { monitorId, snapshotId: snapshot.id });
 
     if (!monitor.lastHash || !monitor.lastContentRefId) {
+      log("info", "Baseline snapshot stored", { monitorId });
       await prisma.monitor.update({
         where: { id: monitor.id },
         data: {
@@ -195,6 +260,9 @@ export async function runMonitor(monitorId: string) {
 
     const previousSnapshot = monitor.lastContentRef;
     if (!previousSnapshot) {
+      log("info", "Previous snapshot missing; resetting baseline", {
+        monitorId,
+      });
       await prisma.monitor.update({
         where: { id: monitor.id },
         data: {
@@ -214,6 +282,7 @@ export async function runMonitor(monitorId: string) {
     const prevContent = previousSnapshot.content;
 
     if (monitor.lastHash === hash) {
+      log("info", "No change detected (hash match)", { monitorId });
       await prisma.monitor.update({
         where: { id: monitor.id },
         data: {
@@ -240,6 +309,7 @@ export async function runMonitor(monitorId: string) {
     );
 
     if (!meaningful) {
+      log("info", "Change ignored (not meaningful)", { monitorId });
       await prisma.monitor.update({
         where: { id: monitor.id },
         data: {
@@ -269,6 +339,11 @@ export async function runMonitor(monitorId: string) {
         importanceScore,
       },
     });
+    log("info", "Change event created", {
+      monitorId,
+      eventId: changeEvent.id,
+      importanceScore,
+    });
 
     const { before, after } = extractSnippets(prevContent, normalized, diffs);
     const recipients = monitor.project.notificationTargets
@@ -294,11 +369,21 @@ export async function runMonitor(monitorId: string) {
 
       try {
         await sendEmail({ to: recipients, ...email });
+        log("info", "Change notification sent", {
+          monitorId,
+          eventId: changeEvent.id,
+          recipientCount: recipients.length,
+        });
         await prisma.changeEvent.update({
           where: { id: changeEvent.id },
           data: { notifiedAt: new Date(), notifyError: null },
         });
       } catch (error) {
+        log("warn", "Change notification failed", {
+          monitorId,
+          eventId: changeEvent.id,
+          message: error instanceof Error ? error.message : "Email failed",
+        });
         await prisma.changeEvent.update({
           where: { id: changeEvent.id },
           data: {
@@ -325,7 +410,13 @@ export async function runMonitor(monitorId: string) {
       where: { id: jobRun.id },
       data: { finishedAt: new Date(), success: true },
     });
+    log("info", "Monitor run finished", { monitorId, jobRunId: jobRun.id });
   } catch (error) {
+    log("error", "Monitor run failed", {
+      monitorId,
+      jobRunId: jobRun.id,
+      message: error instanceof Error ? error.message : "Unexpected error",
+    });
     await handleError(monitorId, error, jobRun.id);
   }
 }
@@ -350,6 +441,24 @@ export async function startWorker() {
       }
     }
   });
+
+  log("info", "Worker ready", {
+    pid: process.pid,
+    logLevel: LOG_LEVEL,
+    heartbeatMinutes: Number.isFinite(HEARTBEAT_MINUTES)
+      ? HEARTBEAT_MINUTES
+      : 0,
+  });
+
+  if (Number.isFinite(HEARTBEAT_MINUTES) && HEARTBEAT_MINUTES > 0) {
+    const intervalMs = HEARTBEAT_MINUTES * 60 * 1000;
+    const heartbeat = setInterval(() => {
+      log("debug", "Worker heartbeat", {
+        timestamp: new Date().toISOString(),
+      });
+    }, intervalMs);
+    heartbeat.unref?.();
+  }
 
   return boss;
 }
