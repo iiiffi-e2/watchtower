@@ -16,15 +16,16 @@ function formatDate(date: Date | null) {
 }
 
 type PageProps = {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 };
 
 export default async function MonitorDetailPage({ params }: PageProps) {
+  const { id } = await params;
   const session = await getServerAuthSession();
   const userId = session?.user?.id as string;
 
   const monitor = await prisma.monitor.findFirst({
-    where: { id: params.id, project: { userId } },
+    where: { id, project: { userId } },
     include: {
       changeEvents: {
         orderBy: { createdAt: "desc" },
