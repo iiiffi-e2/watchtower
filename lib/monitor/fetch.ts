@@ -91,6 +91,12 @@ export async function fetchPage(
       },
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    // eslint-disable-next-line no-console
+    console.warn("Playwright fetch failed; falling back to HTTP", {
+      url,
+      message,
+    });
     if (browser) {
       await browser.close();
     }
@@ -116,11 +122,11 @@ export async function fetchPage(
         },
       };
     } catch (fallbackError) {
-      const message =
+      const fallbackMessage =
         fallbackError instanceof Error
           ? fallbackError.message
           : "Fetch failed";
-      throw new Error(message);
+      throw new Error(fallbackMessage);
     }
   }
 }
