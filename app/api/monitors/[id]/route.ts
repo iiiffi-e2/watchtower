@@ -21,8 +21,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       changeEvents: {
         orderBy: { createdAt: "desc" },
         include: {
-          previousSnapshot: true,
-          currentSnapshot: true,
+          previousSnapshot: {
+            select: { id: true, content: true, screenshotMime: true },
+          },
+          currentSnapshot: {
+            select: { id: true, content: true, screenshotMime: true },
+          },
         },
       },
     },

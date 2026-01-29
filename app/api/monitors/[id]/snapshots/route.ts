@@ -36,6 +36,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     where: { monitorId: monitor.id },
     orderBy: { capturedAt: "desc" },
     take: Math.min(limit, 50),
+    select: {
+      id: true,
+      capturedAt: true,
+      source: true,
+      httpStatus: true,
+      contentType: true,
+      hash: true,
+      screenshotMime: true,
+    },
   });
 
   return NextResponse.json({ snapshots });

@@ -113,6 +113,8 @@ model Snapshot {
   httpStatus  Int?
   contentType SnapshotContentType
   content     String
+  screenshot  Bytes?
+  screenshotMime String?
   rawMeta     Json?
   hash        String
   createdAt   DateTime            @default(now())

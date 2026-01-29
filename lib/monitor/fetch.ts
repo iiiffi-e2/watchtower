@@ -13,14 +13,24 @@ export type FetchResult = {
     startedAt: string;
     durationMs: number;
   };
+  screenshot: Buffer | null;
+  screenshotType: string | null;
+};
+
+export type FetchOptions = {
+  captureScreenshot?: boolean;
 };
 
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 
-export async function fetchPage(url: string): Promise<FetchResult> {
+export async function fetchPage(
+  url: string,
+  options: FetchOptions = {}
+): Promise<FetchResult> {
   const startedAt = new Date();
   const startedTime = Date.now();
+  const captureScreenshot = options.captureScreenshot ?? false;
 
   let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
   try {
@@ -32,7 +42,7 @@ export async function fetchPage(url: string): Promise<FetchResult> {
 
     await page.route("**/*", (route) => {
       const type = route.request().resourceType();
-      if (["image", "media", "font"].includes(type)) {
+      if (!captureScreenshot && ["image", "media", "font"].includes(type)) {
         route.abort();
       } else {
         route.continue();
@@ -53,6 +63,17 @@ export async function fetchPage(url: string): Promise<FetchResult> {
     const html = await page.content();
     const title = await page.title();
     const finalUrl = page.url();
+    let screenshot: Buffer | null = null;
+    let screenshotType: string | null = null;
+    if (captureScreenshot) {
+      try {
+        screenshot = await page.screenshot({ fullPage: true, type: "png" });
+        screenshotType = "image/png";
+      } catch {
+        screenshot = null;
+        screenshotType = null;
+      }
+    }
     await browser.close();
     browser = null;
 
@@ -62,6 +83,8 @@ export async function fetchPage(url: string): Promise<FetchResult> {
       finalUrl,
       status: response?.status() ?? null,
       title,
+      screenshot,
+      screenshotType,
       timings: {
         startedAt: startedAt.toISOString(),
         durationMs: Date.now() - startedTime,
@@ -85,6 +108,8 @@ export async function fetchPage(url: string): Promise<FetchResult> {
         finalUrl: response.url ?? url,
         status: response.status,
         title: null,
+        screenshot: null,
+        screenshotType: null,
         timings: {
           startedAt: startedAt.toISOString(),
           durationMs: Date.now() - startedTime,

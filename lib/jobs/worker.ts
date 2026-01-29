@@ -192,7 +192,9 @@ export async function runMonitor(monitorId: string) {
       throw new Error(urlCheck.error ?? "Invalid monitor URL.");
     }
 
-    const fetchResult = await fetchPage(urlCheck.url);
+    const fetchResult = await fetchPage(urlCheck.url, {
+      captureScreenshot: true,
+    });
     log("debug", "Fetched page", {
       monitorId,
       source: fetchResult.source,
@@ -229,6 +231,8 @@ export async function runMonitor(monitorId: string) {
         httpStatus: fetchResult.status,
         contentType: extractResult.contentType,
         content: normalized,
+        screenshot: fetchResult.screenshot,
+        screenshotMime: fetchResult.screenshotType,
         rawMeta: {
           title: fetchResult.title,
           finalUrl: fetchResult.finalUrl,

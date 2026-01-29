@@ -29,17 +29,33 @@ export default async function MonitorDetailPage({ params }: PageProps) {
       changeEvents: {
         orderBy: { createdAt: "desc" },
         include: {
-          previousSnapshot: true,
-          currentSnapshot: true,
+          previousSnapshot: {
+            select: { id: true, content: true, screenshotMime: true },
+          },
+          currentSnapshot: {
+            select: { id: true, content: true, screenshotMime: true },
+          },
         },
       },
-      snapshots: { orderBy: { capturedAt: "desc" }, take: 10 },
+      snapshots: {
+        orderBy: { capturedAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          capturedAt: true,
+          source: true,
+          httpStatus: true,
+          screenshotMime: true,
+        },
+      },
     },
   });
 
   if (!monitor) {
     notFound();
   }
+
+  const latestSnapshot = monitor.snapshots[0];
 
   return (
     <div className="stack">
@@ -87,6 +103,26 @@ export default async function MonitorDetailPage({ params }: PageProps) {
       </div>
 
       <div className="card stack">
+        <h2>Latest screenshot</h2>
+        {!latestSnapshot?.screenshotMime && (
+          <p className="muted">No screenshot captured yet.</p>
+        )}
+        {latestSnapshot?.screenshotMime && (
+          <img
+            src={`/api/snapshots/${latestSnapshot.id}/screenshot`}
+            alt={`Latest screenshot for ${monitor.name ?? monitor.url}`}
+            style={{
+              width: "100%",
+              maxHeight: 520,
+              objectFit: "contain",
+              borderRadius: 12,
+              border: "1px solid #e5e7eb",
+            }}
+          />
+        )}
+      </div>
+
+      <div className="card stack">
         <h2>Change history</h2>
         {monitor.changeEvents.length === 0 && (
           <p className="muted">No changes recorded yet.</p>
@@ -96,6 +132,8 @@ export default async function MonitorDetailPage({ params }: PageProps) {
           const next = event.currentSnapshot?.content ?? "";
           const { diffs } = createDiff(prev, next);
           const snippets = extractSnippets(prev, next, diffs);
+          const beforeScreenshot = event.previousSnapshot?.screenshotMime;
+          const afterScreenshot = event.currentSnapshot?.screenshotMime;
 
           return (
             <div key={event.id} id={`event-${event.id}`} className="card">
@@ -121,6 +159,46 @@ export default async function MonitorDetailPage({ params }: PageProps) {
                   <div style={{ whiteSpace: "pre-wrap" }}>{snippets.after}</div>
                 </div>
               </div>
+              {(beforeScreenshot || afterScreenshot) && (
+                <div className="grid" style={{ marginTop: 16 }}>
+                  <div>
+                    <div className="muted">Before screenshot</div>
+                    {beforeScreenshot ? (
+                      <img
+                        src={`/api/snapshots/${event.previousSnapshot?.id}/screenshot`}
+                        alt="Before change screenshot"
+                        style={{
+                          width: "100%",
+                          maxHeight: 420,
+                          objectFit: "contain",
+                          borderRadius: 12,
+                          border: "1px solid #e5e7eb",
+                        }}
+                      />
+                    ) : (
+                      <div className="muted">No screenshot available.</div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="muted">After screenshot</div>
+                    {afterScreenshot ? (
+                      <img
+                        src={`/api/snapshots/${event.currentSnapshot?.id}/screenshot`}
+                        alt="After change screenshot"
+                        style={{
+                          width: "100%",
+                          maxHeight: 420,
+                          objectFit: "contain",
+                          borderRadius: 12,
+                          border: "1px solid #e5e7eb",
+                        }}
+                      />
+                    ) : (
+                      <div className="muted">No screenshot available.</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -135,7 +213,20 @@ export default async function MonitorDetailPage({ params }: PageProps) {
           {monitor.snapshots.map((snapshot) => (
             <li key={snapshot.id} className="muted">
               {formatDate(snapshot.capturedAt)} · {snapshot.source} ·{" "}
-              {snapshot.httpStatus ?? "n/a"}
+              {snapshot.httpStatus ?? "n/a"}{" "}
+              {snapshot.screenshotMime && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <a
+                    href={`/api/snapshots/${snapshot.id}/screenshot`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View screenshot
+                  </a>
+                </>
+              )}
             </li>
           ))}
         </ul>
