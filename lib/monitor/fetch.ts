@@ -69,7 +69,16 @@ export async function fetchPage(
       try {
         screenshot = await page.screenshot({ fullPage: true, type: "png" });
         screenshotType = "image/png";
-      } catch {
+      } catch (screenshotError) {
+        const screenshotMessage =
+          screenshotError instanceof Error
+            ? screenshotError.message
+            : "Unknown screenshot error";
+        // eslint-disable-next-line no-console
+        console.warn("Playwright screenshot failed", {
+          url,
+          message: screenshotMessage,
+        });
         screenshot = null;
         screenshotType = null;
       }

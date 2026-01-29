@@ -227,6 +227,11 @@ export async function runMonitor(monitorId: string) {
     const screenshotBytes = fetchResult.screenshot
       ? new Uint8Array(fetchResult.screenshot)
       : null;
+    log("debug", "Screenshot captured", {
+      monitorId,
+      bytes: screenshotBytes?.byteLength ?? 0,
+      mime: fetchResult.screenshotType ?? null,
+    });
     const snapshot = await prisma.snapshot.create({
       data: {
         monitorId: monitor.id,
